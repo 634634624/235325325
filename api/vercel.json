@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/merge-charts.js": {
+      "maxDuration": 30
+    }
+  }
+}
