@@ -1,7 +1,10 @@
 {
-  "functions": {
-    "api/merge-charts.js": {
-      "maxDuration": 30
-    }
+  "name": "chart-merger",
+  "version": "1.0.0",
+  "dependencies": {
+    "canvas": "^2.11.2"
+  },
+  "engines": {
+    "node": "22.x"
   }
 }
