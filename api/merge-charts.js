@@ -1,3 +1,5 @@
+const sharp = require('sharp');
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -17,21 +19,66 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'No valid charts provided' });
     }
 
+    const chartWidth = 600;
+    const chartHeight = 400;
+    const totalWidth = chartWidth * validCharts.length;
+
     console.log(`Processing ${validCharts.length} charts`);
 
-    // Just return the first chart for now (temporary solution)
-    // TODO: Implement proper image merging
-    const mergedChart = validCharts[0];
+    // Convert base64 to buffers and resize
+    const imageBuffers = [];
+    for (let i = 0; i < validCharts.length; i++) {
+      try {
+        const buffer = Buffer.from(validCharts[i], 'base64');
+        const resizedBuffer = await sharp(buffer)
+          .resize(chartWidth, chartHeight, { fit: 'contain', background: '#ffffff' })
+          .png()
+          .toBuffer();
+        imageBuffers.push(resizedBuffer);
+        console.log(`Chart ${i + 1} processed`);
+      } catch (error) {
+        console.error(`Error processing chart ${i + 1}:`, error);
+        throw error;
+      }
+    }
+
+    // Create composite image
+    const composite = [];
+    for (let i = 0; i < imageBuffers.length; i++) {
+      composite.push({
+        input: imageBuffers[i],
+        left: i * chartWidth,
+        top: 0
+      });
+    }
+
+    console.log('Creating merged image...');
+
+    // Merge images horizontally
+    const mergedBuffer = await sharp({
+      create: {
+        width: totalWidth,
+        height: chartHeight,
+        channels: 3,
+        background: '#ffffff'
+      }
+    })
+    .composite(composite)
+    .png()
+    .toBuffer();
+
+    const mergedBase64 = mergedBuffer.toString('base64');
+
+    console.log('Merge successful');
 
     res.status(200).json({
       success: true,
-      mergedChart: mergedChart,
+      mergedChart: mergedBase64,
       chartsCount: validCharts.length,
       dimensions: {
-        width: 600 * validCharts.length,
-        height: 400
-      },
-      note: 'Temporary: returning first chart only'
+        width: totalWidth,
+        height: chartHeight
+      }
     });
 
   } catch (error) {
