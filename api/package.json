@@ -1,0 +1,10 @@
+{
+  "name": "chart-merger",
+  "version": "1.0.0",
+  "dependencies": {
+    "canvas": "^2.11.2"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}
