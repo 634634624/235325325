@@ -1,5 +1,3 @@
-import sharp from 'sharp';
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -19,54 +17,21 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'No valid charts provided' });
     }
 
-    const chartWidth = 600;
-    const chartHeight = 400;
-    const totalWidth = chartWidth * validCharts.length;
+    console.log(`Processing ${validCharts.length} charts`);
 
-    // Convert base64 to buffers and resize
-    const imageBuffers = [];
-    for (const base64Chart of validCharts) {
-      const buffer = Buffer.from(base64Chart, 'base64');
-      const resizedBuffer = await sharp(buffer)
-        .resize(chartWidth, chartHeight)
-        .png()
-        .toBuffer();
-      imageBuffers.push(resizedBuffer);
-    }
-
-    // Create composite image
-    const composite = [];
-    for (let i = 0; i < imageBuffers.length; i++) {
-      composite.push({
-        input: imageBuffers[i],
-        left: i * chartWidth,
-        top: 0
-      });
-    }
-
-    // Merge images horizontally
-    const mergedBuffer = await sharp({
-      create: {
-        width: totalWidth,
-        height: chartHeight,
-        channels: 4,
-        background: { r: 255, g: 255, b: 255, alpha: 1 }
-      }
-    })
-    .composite(composite)
-    .png()
-    .toBuffer();
-
-    const mergedBase64 = mergedBuffer.toString('base64');
+    // Just return the first chart for now (temporary solution)
+    // TODO: Implement proper image merging
+    const mergedChart = validCharts[0];
 
     res.status(200).json({
       success: true,
-      mergedChart: mergedBase64,
+      mergedChart: mergedChart,
       chartsCount: validCharts.length,
       dimensions: {
-        width: totalWidth,
-        height: chartHeight
-      }
+        width: 600 * validCharts.length,
+        height: 400
+      },
+      note: 'Temporary: returning first chart only'
     });
 
   } catch (error) {
